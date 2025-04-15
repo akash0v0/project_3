@@ -5,7 +5,6 @@ from src.service.excel_processor import ExcelProcessor
 router = APIRouter(
     prefix="/process-excel",
     tags=["excel"],
-    responses={404: {"description": "Not found"}},
 )
 
 @router.get("/")
