@@ -32,6 +32,7 @@ class ExcelProcessor:
             concat_result = ExcelProcessor.__concatenate_columns(load_result.data, columns_to_concatenate)
             result = concat_result
         else:
+            # If excel loading failed, return the error
             result = load_result
         
         return result
@@ -68,8 +69,8 @@ class ExcelProcessor:
                 else:
                     # Convert DataFrame to list of lists
                     data = [df.columns.tolist()]  # Include headers
-                    data.extend(df.values.tolist())
-                    result = Result.ok(data)
+                    data.extend(df.values.tolist())  # Add data rows to the list
+                    result = Result.ok(data)  # Return successful result with data
             except Exception as e:
                 result = Result.fail(f"Error loading Excel file: {str(e)}")
                 
