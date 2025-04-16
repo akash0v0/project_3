@@ -23,17 +23,18 @@ class ExcelProcessor:
         Returns:
             Result[List[List[str]]]: Encapsulates success status, processed data, or error message.
         """
+        result = None
+        
         # Load Excel file
         load_result = ExcelProcessor.__load_excel_file(file_path)
-        if not load_result.is_success():
-            return load_result  # Return Result directly
+        if load_result.is_success():
+            # Concatenate columns if load was successful
+            concat_result = ExcelProcessor.__concatenate_columns(load_result.data, columns_to_concatenate)
+            result = concat_result
+        else:
+            result = load_result
         
-        # Concatenate columns
-        concat_result = ExcelProcessor.__concatenate_columns(load_result.data, columns_to_concatenate)
-        if not concat_result.is_success():
-            return concat_result  # Return Result directly
-        
-        return concat_result  # Return Result directly
+        return result
 
     @staticmethod
     def __load_excel_file(file_path: str) -> Result[List[List[str]]]:
@@ -52,26 +53,29 @@ class ExcelProcessor:
         Returns:
             Result[List[List[str]]] : Encapsulates success status, data, or error message.
         """
-        # Check if file exists
+        result = None
+        
         if not os.path.exists(file_path):
-            return Result.fail(f"File not found: {file_path}")
-
-        try:
-            # Read Excel file using pandas
-            df = pd.read_excel(file_path)
-            
-            # Check if data is empty
-            if df.empty:
-                return Result.fail("Excel file contains no data")
-            
-            # Convert DataFrame to list of lists
-            data = [df.columns.tolist()]  # Include headers
-            data.extend(df.values.tolist())
-            
-            return Result.ok(data)
-        except Exception as e:
-            return Result.fail(f"Error loading Excel file: {str(e)}")
+            result = Result.fail(f"File not found: {file_path}")
+        else:
+            try:
+                # Read Excel file using pandas
+                df = pd.read_excel(file_path)
+                
+                # Check if data is empty
+                if df.empty:
+                    result = Result.fail("Excel file contains no data")
+                else:
+                    # Convert DataFrame to list of lists
+                    data = [df.columns.tolist()]  # Include headers
+                    data.extend(df.values.tolist())
+                    result = Result.ok(data)
+            except Exception as e:
+                result = Result.fail(f"Error loading Excel file: {str(e)}")
+                
+        return result
     
+
     @staticmethod
     def __concatenate_columns(data: List[List[str]], column_names: List[str]) -> Result[List[List[str]]]:
         """
@@ -89,40 +93,53 @@ class ExcelProcessor:
         Returns:
             Result[List[List[str]]]: Encapsulates success status, processed data, or error message.
         """
+        result = None
         delimiter = " "  # Default delimiter
+        
         if not data or len(data) < 2:  # Need at least headers and one row
-            return Result.fail("No data to process")
-        
-        headers = data[0]
-        
-        # Validate that all specified columns exist
-        for column in column_names:
-            if column not in headers:
-                return Result.fail(f"Column '{column}' not found in the data")
-        
-        # Get indices of columns to concatenate
-        column_indices = [headers.index(column) for column in column_names]
-        
-        # Create new data with concatenated column
-        new_data = [headers + ["Concatenated"]]  # Add new header
-        
-        for i, row in enumerate(data[1:], 1):  # Skip headers, keep track of row number
-            # Check if row has enough columns
-            if any(idx >= len(row) for idx in column_indices):
-                return Result.fail("Row has inconsistent number of columns")
+            result = Result.fail("No data to process")
+        else:
+            headers = data[0]
+            column_exists = True
             
-            # Extract values from specified columns
-            values_to_concatenate = [row[idx] for idx in column_indices]
+            # Validate that all specified columns exist
+            for column in column_names:
+                if column not in headers:
+                    result = Result.fail(f"Column '{column}' not found in the data")
+                    column_exists = False
+                    break
             
-            # Check for None or missing values in the specified columns
-            if any(value is None or pd.isna(value) for value in values_to_concatenate):
-                return Result.fail("Row contains null values in columns to concatenate")
-            
-            # Create concatenated value
-            concatenated_value = delimiter.join(map(str, values_to_concatenate))
-            
-            # Add row with concatenated value
-            new_data.append(row + [concatenated_value])
+            if column_exists:
+                # Get indices of columns to concatenate
+                column_indices = [headers.index(column) for column in column_names]
+                
+                # Create new data with concatenated column
+                new_data = [headers + ["Concatenated"]]  # Add new header
+                error_found = False
+                
+                for i, row in enumerate(data[1:], 1):  # Skip headers, keep track of row number
+                    # Check if row has enough columns
+                    if any(idx >= len(row) for idx in column_indices):
+                        result = Result.fail("Row has inconsistent number of columns")
+                        error_found = True
+                        break
+                    
+                    # Extract values from specified columns
+                    values_to_concatenate = [row[idx] for idx in column_indices]
+                    
+                    # Check for None or missing values in the specified columns
+                    if any(value is None or pd.isna(value) for value in values_to_concatenate):
+                        result = Result.fail("Row contains null values in columns to concatenate")
+                        error_found = True
+                        break
+                    
+                    # Create concatenated value
+                    concatenated_value = delimiter.join(map(str, values_to_concatenate))
+                    
+                    # Add row with concatenated value
+                    new_data.append(row + [concatenated_value])
+                
+                if not error_found:
+                    result = Result.ok(new_data)
         
-        return Result.ok(new_data)
-
+        return result
