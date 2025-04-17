@@ -99,7 +99,7 @@ class ExcelProcessor:
         delimiter = " "  # Default delimiter
         
         if not data or len(data) < 2:  # Need at least headers and one row
-            result = Result.fail("No data to process")
+            result = Result.fail("Insufficient data for concatenation")
         else:
             headers = data[0]
             column_exists = True
