@@ -80,7 +80,7 @@ class ExcelProcessor:
     @staticmethod
     def __concatenate_columns(data: List[List[str]], column_names: List[str]) -> Result[List[List[str]]]:
         """
-        Merge specified columns in the data.
+        Merge specified columns in the data and remove original columns.
         
         Inputs:
             data (List[List[str]]): Input data as a list of lists.
@@ -89,7 +89,8 @@ class ExcelProcessor:
         Functionality:
             - Validates that the specified columns exist in the data.
             - Concatenates the values of the specified columns for each row.
-            - Returns a new list of lists with an additional concatenated column.
+            - Removes the original columns that were concatenated.
+            - Returns a new list of lists with concatenated column but without original columns.
             
         Returns:
             Result[List[List[str]]]: Encapsulates success status, processed data, or error message.
@@ -114,8 +115,12 @@ class ExcelProcessor:
                 # Get indices of columns to concatenate
                 column_indices = [headers.index(column) for column in column_names]
                 
-                # Create new data with concatenated column
-                new_data = [headers + ["Concatenated"]]  # Add new header
+                # Create new headers without the columns to be concatenated
+                new_headers = [header for i, header in enumerate(headers) if i not in column_indices]
+                new_headers.append("Concatenated")  # Add new header for concatenated column
+                
+                # Create new data with concatenated column but without original columns
+                new_data = [new_headers]
                 error_found = False
                 
                 for i, row in enumerate(data[1:], 1):  # Skip headers, keep track of row number
@@ -137,8 +142,11 @@ class ExcelProcessor:
                     # Create concatenated value
                     concatenated_value = delimiter.join(map(str, values_to_concatenate))
                     
-                    # Add row with concatenated value
-                    new_data.append(row + [concatenated_value])
+                    # Create new row without the columns that were concatenated
+                    new_row = [val for i, val in enumerate(row) if i not in column_indices]
+                    new_row.append(concatenated_value)  # Add concatenated value
+                    
+                    new_data.append(new_row)
                 
                 if not error_found:
                     result = Result.ok(new_data)

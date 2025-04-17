@@ -11,7 +11,7 @@ from src.utils.result import Result
             "valid_file_and_columns",
             {'Name': ['John', 'Alice'], 'City': ['New York', 'London'], 'Age': [30, 25]},
             ['Name', 'City'],
-            Result.ok([['Name', 'City', 'Age', 'Concatenated'], ['John', 'New York', 30, 'John New York'], ['Alice', 'London', 25, 'Alice London']]),  # Expected output wrapped in Result
+            Result.ok([['Age', 'Concatenated'], [30, 'John New York'], [25, 'Alice London']]),  # Removed 'Name' and 'City' columns
             None
         ),
          # Test process_file with a valid file and columns, including integers
@@ -19,7 +19,7 @@ from src.utils.result import Result
             "valid_file_with_integers",
             {'ID': [101, 102], 'Status': ['Active', 'Inactive'], 'Score': [85, 92]},
             ['ID', 'Status'],
-            Result.ok([['ID', 'Status', 'Score', 'Concatenated'], [101, 'Active', 85, '101 Active'], [102, 'Inactive', 92, '102 Inactive']]),  # Expected output wrapped in Result
+            Result.ok([['Score', 'Concatenated'], [85, '101 Active'], [92, '102 Inactive']]),  # Removed 'ID' and 'Status' columns
             None
         ),
         # Test process_file with an invalid file path

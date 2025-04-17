@@ -9,8 +9,8 @@ router = APIRouter(
 
 @router.get("/")
 async def process_excel(
-    file_path: str = Query("static/sample.xlsx", description="Path to the Excel file"),
-    columns: str = Query("Firstname,Lastname", description="Comma-separated column names to concatenate")
+    file_path: str = Query("static/sample_2.xlsx", description="Path to the Excel file"),
+    columns: str = Query("First Name,Last Name", description="Comma-separated column names to concatenate")
 ):
     """
     Process an Excel file by concatenating specified columns.
