@@ -3,7 +3,7 @@ from pathlib import Path
 from src.service.excel_processor import ExcelProcessor
 
 router = APIRouter(
-    prefix="/process-excel",
+    prefix="/data",
     tags=["excel"],
 )
 
